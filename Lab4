@@ -1,0 +1,152 @@
+#include <iostream>
+#include <string>
+
+class Car {
+public:
+    Car(const std::string& model, const std::string& make, int year, double price)
+        : model(model), make(make), year(year), price(price) {}
+
+    std::string getModel() const { return model; }
+    std::string getMake() const { return make; }
+    int getYear() const { return year; }
+    double getPrice() const { return price; }
+
+    void print() const {
+        std::cout << "Model: " << model
+                  << ", Make: " << make
+                  << ", Year: " << year
+                  << ", Price: $" << price << std::endl;
+    }
+
+private:
+    std::string model;
+    std::string make;
+    int year;
+    double price;
+};
+
+class Inventory {
+public:
+    Inventory(int capacity) : capacity(capacity), size(0) {
+        cars = new Car*[capacity];
+    }
+
+    ~Inventory() {
+        for (int i = 0; i < size; ++i) {
+            delete cars[i];
+        }
+        delete[] cars;
+    }
+
+    void addCar(const std::string& model, const std::string& make, int year, double price) {
+        if (size < capacity) {
+            cars[size++] = new Car(model, make, year, price);
+        } else {
+            std::cout << "Inventory full!" << std::endl;
+        }
+    }
+
+    void printCars() const {
+        for (int i = 0; i < size; ++i) {
+            cars[i]->print();
+        }
+    }
+
+    void sortCarsByField(int field);
+    void sortMenu();
+
+private:
+    Car** cars;
+    int capacity;
+    int size;
+
+    void bubbleSort(int field);
+    static bool compareCars(const Car* a, const Car* b, int field);
+};
+
+enum SortField {
+    MODEL = 1,
+    MAKE,
+    YEAR,
+    PRICE
+};
+
+void Inventory::bubbleSort(int field) {
+    for (int i = 0; i < size - 1; ++i) {
+        for (int j = 0; j < size - i - 1; ++j) {
+            if (compareCars(cars[j], cars[j + 1], field)) {
+                // Swap pointers
+                Car* temp = cars[j];
+                cars[j] = cars[j + 1];
+                cars[j + 1] = temp;
+            }
+        }
+    }
+}
+
+bool Inventory::compareCars(const Car* a, const Car* b, int field) {
+    switch (field) {
+        case MODEL:
+            return a->getModel() > b->getModel();
+        case MAKE:
+            return a->getMake() > b->getMake();
+        case YEAR:
+            return a->getYear() > b->getYear();
+        case PRICE:
+            return a->getPrice() > b->getPrice();
+        default:
+            return false;
+    }
+}
+
+void Inventory::sortCarsByField(int field) {
+    bubbleSort(field);
+}
+
+void Inventory::sortMenu() {
+    int choice;
+    std::cout << "Sort by:\n1. Model\n2. Make\n3. Year\n4. Price\nChoose an option: ";
+    std::cin >> choice;
+
+    if (choice >= MODEL && choice <= PRICE) {
+        sortCarsByField(choice);
+        printCars();
+    } else {
+        std::cout << "Invalid choice!" << std::endl;
+    }
+}
+
+int main() {
+    Inventory inventory(10); // Maximum 10 cars
+    std::string model, make;
+    int year;
+    double price;
+    char addMore;
+
+    // Loop to add cars
+    do {
+        std::cout << "Enter car model: ";
+        std::cin >> model;
+        std::cout << "Enter car make: ";
+        std::cin >> make;
+        std::cout << "Enter car year: ";
+        std::cin >> year;
+        std::cout << "Enter car price: ";
+        std::cin >> price;
+
+        inventory.addCar(model, make, year, price);
+
+        std::cout << "Do you want to add another car? (y/n): ";
+        std::cin >> addMore;
+
+    } while (addMore == 'y' || addMore == 'Y');
+
+    // Print original order
+    std::cout << "\nOriginal Inventory:\n";
+    inventory.printCars();
+
+    // Sort cars based on user choice
+    inventory.sortMenu();
+
+    return 0;
+}
